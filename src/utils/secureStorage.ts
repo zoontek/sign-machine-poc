@@ -1,4 +1,5 @@
 import base64ArrayBuffer from "base64-arraybuffer";
+import { argon2id } from "hash-wasm";
 import { deleteDB, openDB } from "idb";
 
 // https://diafygi.github.io/webcrypto-examples/
@@ -43,25 +44,21 @@ export const initSignMachine = async (
     ["sign", "verify"]
   );
 
-  const pbkdf2Key = await window.crypto.subtle.importKey(
+  const salt = generateRandomValues(16);
+
+  const passwordHash = await argon2id({
+    password: password.normalize(),
+    salt,
+    parallelism: 1,
+    iterations: 256,
+    memorySize: 512,
+    hashLength: 32,
+    outputType: "binary",
+  });
+
+  const aesGcmKey = await window.crypto.subtle.importKey(
     "raw",
-    encode(password),
-    "PBKDF2",
-    false,
-    ["deriveKey"]
-  );
-
-  // https://github.com/diafygi/webcrypto-examples/#pbkdf2---derivekey
-  const salt = generateRandomValues(8);
-
-  const aesGcmKey = await window.crypto.subtle.deriveKey(
-    {
-      name: "PBKDF2",
-      hash: "SHA-256",
-      salt,
-      iterations: 310000, // https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#pbkdf2,
-    },
-    pbkdf2Key,
+    passwordHash,
     {
       name: "AES-GCM",
       length: 256,
@@ -106,22 +103,19 @@ export const sign = async (password: string, data: string): Promise<string> => {
     throw new Error("Cannot retrieve data");
   }
 
-  const pbkdf2Key = await window.crypto.subtle.importKey(
-    "raw",
-    encode(password),
-    "PBKDF2",
-    false,
-    ["deriveKey"]
-  );
+  const passwordHash = await argon2id({
+    password: password.normalize(),
+    salt,
+    parallelism: 1,
+    iterations: 256,
+    memorySize: 512,
+    hashLength: 32,
+    outputType: "binary",
+  });
 
-  const aesGcmKey = await window.crypto.subtle.deriveKey(
-    {
-      name: "PBKDF2",
-      hash: "SHA-256",
-      salt,
-      iterations: 310000, // https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#pbkdf2,
-    },
-    pbkdf2Key,
+  const aesGcmKey = await window.crypto.subtle.importKey(
+    "raw",
+    passwordHash,
     {
       name: "AES-GCM",
       length: 256,
