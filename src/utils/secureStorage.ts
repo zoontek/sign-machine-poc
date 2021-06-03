@@ -1,7 +1,7 @@
 import base64ArrayBuffer from "base64-arraybuffer";
-import { eddsa as Eddsa } from "elliptic";
 import { argon2id } from "hash-wasm";
 import { deleteDB, openDB } from "idb";
+import * as ed from "noble-ed25519";
 
 // https://diafygi.github.io/webcrypto-examples/
 // https://github.com/willgm/web-crypto-tools/blob/master/src/web-crypto-tools.ts
@@ -21,7 +21,7 @@ const generateHash = (data: string): Promise<ArrayBuffer> =>
 const generateRandomValues = (length: number) =>
   window.crypto.getRandomValues(new Uint8Array(length));
 
-const generateKeyPairFromPwAndSalt = async (
+const generatePrivateKeyFromPwAndSalt = async (
   password: string,
   salt: Uint8Array
 ) => {
@@ -32,13 +32,11 @@ const generateKeyPairFromPwAndSalt = async (
     iterations: 256,
     memorySize: 512,
     hashLength: 32,
-    outputType: "binary",
+    outputType: "hex",
   });
 
-  // use password hash as seed to deterministically generate an EdDSA key pair
-  // https://github.com/indutny/elliptic#eddsa
-  const eddsa = new Eddsa("ed25519");
-  return eddsa.keyFromSecret(decode(passwordHash));
+  // use password hash as private key
+  return Buffer.from(passwordHash, "hex");
 };
 
 export const initSignMachine = async (password: string): Promise<string> => {
@@ -57,16 +55,18 @@ export const initSignMachine = async (password: string): Promise<string> => {
   // generate random salt
   const salt = generateRandomValues(16);
 
-  // deterministically generate key pair from pw and salt
-  const keyPair = await generateKeyPairFromPwAndSalt(password, salt);
-  const publicKey = keyPair.getPublic("hex");
+  // deterministically generate private key from pw and salt
+  const privateKey = await generatePrivateKeyFromPwAndSalt(password, salt);
+
+  // derive public key from it
+  const publicKey = await ed.getPublicKey(privateKey);
 
   // TODO: send public key to the server
   // sendPublicKey(publicKey)
 
   await database.put(storeName, salt, "salt");
 
-  return publicKey;
+  return Buffer.from(publicKey).toString("hex");
 };
 
 export const sign = async (password: string, data: string): Promise<string> => {
@@ -81,9 +81,12 @@ export const sign = async (password: string, data: string): Promise<string> => {
     throw new Error("Cannot retrieve salt");
   }
 
-  const keyPair = await generateKeyPairFromPwAndSalt(password, salt);
+  const privateKey = await generatePrivateKeyFromPwAndSalt(password, salt);
 
-  const signature = keyPair.sign(data).toHex();
+  const signature = await ed.sign(
+    Buffer.from(data).toString("hex"),
+    privateKey
+  );
 
   // TODO: Protect from timing attack
   return signature;
