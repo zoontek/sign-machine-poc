@@ -53,7 +53,7 @@ const Home: FC = () => {
               disabled={password === ""}
               onClick={async () => {
                 const newPublicKey = await initSignMachine(password);
-                setClientPublicKey(JSON.stringify(newPublicKey));
+                setClientPublicKey(newPublicKey);
               }}
             >
               Enroll

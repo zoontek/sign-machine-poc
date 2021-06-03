@@ -1,6 +1,7 @@
 import base64ArrayBuffer from "base64-arraybuffer";
 import { argon2id } from "hash-wasm";
 import { deleteDB, openDB } from "idb";
+import * as ed from "noble-ed25519";
 
 // https://diafygi.github.io/webcrypto-examples/
 // https://github.com/willgm/web-crypto-tools/blob/master/src/web-crypto-tools.ts
@@ -20,9 +21,25 @@ const generateHash = (data: string): Promise<ArrayBuffer> =>
 const generateRandomValues = (length: number) =>
   window.crypto.getRandomValues(new Uint8Array(length));
 
-export const initSignMachine = async (
-  password: string
-): Promise<JsonWebKey> => {
+const generatePrivateKeyFromPwAndSalt = async (
+  password: string,
+  salt: Uint8Array
+) => {
+  const passwordHash = await argon2id({
+    password: password.normalize(),
+    salt,
+    parallelism: 1,
+    iterations: 256,
+    memorySize: 512,
+    hashLength: 32,
+    outputType: "hex",
+  });
+
+  // use password hash as private key
+  return Buffer.from(passwordHash, "hex");
+};
+
+export const initSignMachine = async (password: string): Promise<string> => {
   const databaseName = "databaseName";
   const storeName = "storeName";
 
@@ -35,56 +52,21 @@ export const initSignMachine = async (
     },
   });
 
-  const ecdsaKey = await window.crypto.subtle.generateKey(
-    {
-      name: "ECDSA",
-      namedCurve: "P-256",
-    },
-    true,
-    ["sign", "verify"]
-  );
-
+  // generate random salt
   const salt = generateRandomValues(16);
 
-  const passwordHash = await argon2id({
-    password: password.normalize(),
-    salt,
-    parallelism: 1,
-    iterations: 256,
-    memorySize: 512,
-    hashLength: 32,
-    outputType: "binary",
-  });
+  // deterministically generate private key from pw and salt
+  const privateKey = await generatePrivateKeyFromPwAndSalt(password, salt);
 
-  const aesGcmKey = await window.crypto.subtle.importKey(
-    "raw",
-    passwordHash,
-    {
-      name: "AES-GCM",
-      length: 256,
-    },
-    false,
-    ["wrapKey"]
-  );
+  // derive public key from it
+  const publicKey = await ed.getPublicKey(privateKey);
 
-  // https://github.com/diafygi/webcrypto-examples/#aes-gcm---wrapkey
-  const wrappedPrivateKeyNonce = generateRandomValues(16);
+  // TODO: send public key to the server
+  // sendPublicKey(publicKey)
 
-  const [wrappedPrivateKey, publicKey] = await Promise.all([
-    window.crypto.subtle.wrapKey("pkcs8", ecdsaKey.privateKey, aesGcmKey, {
-      name: "AES-GCM",
-      iv: wrappedPrivateKeyNonce,
-    }),
-    window.crypto.subtle.exportKey("jwk", ecdsaKey.publicKey),
-  ]);
+  await database.put(storeName, salt, "salt");
 
-  await Promise.all([
-    database.put(storeName, salt, "salt"),
-    database.put(storeName, wrappedPrivateKey, "wrappedPrivateKey"),
-    database.put(storeName, wrappedPrivateKeyNonce, "wrappedPrivateKey-nonce"),
-  ]);
-
-  return publicKey;
+  return Buffer.from(publicKey).toString("hex");
 };
 
 export const sign = async (password: string, data: string): Promise<string> => {
@@ -93,67 +75,19 @@ export const sign = async (password: string, data: string): Promise<string> => {
 
   const database = await openDB(databaseName, 1);
 
-  const [salt, wrappedPrivateKey, wrappedPrivateKeyNonce] = await Promise.all([
-    database.get(storeName, "salt"),
-    database.get(storeName, "wrappedPrivateKey"),
-    database.get(storeName, "wrappedPrivateKey-nonce"),
-  ]);
+  const salt = await database.get(storeName, "salt");
 
-  if (!salt || !wrappedPrivateKey || !wrappedPrivateKeyNonce) {
-    throw new Error("Cannot retrieve data");
+  if (!salt) {
+    throw new Error("Cannot retrieve salt");
   }
 
-  const passwordHash = await argon2id({
-    password: password.normalize(),
-    salt,
-    parallelism: 1,
-    iterations: 256,
-    memorySize: 512,
-    hashLength: 32,
-    outputType: "binary",
-  });
+  const privateKey = await generatePrivateKeyFromPwAndSalt(password, salt);
 
-  const aesGcmKey = await window.crypto.subtle.importKey(
-    "raw",
-    passwordHash,
-    {
-      name: "AES-GCM",
-      length: 256,
-    },
-    false,
-    ["unwrapKey"]
+  const signature = await ed.sign(
+    Buffer.from(data).toString("hex"),
+    privateKey
   );
 
-  try {
-    const privateKey = await window.crypto.subtle.unwrapKey(
-      "pkcs8",
-      wrappedPrivateKey,
-      aesGcmKey,
-      {
-        name: "AES-GCM",
-        iv: wrappedPrivateKeyNonce,
-      },
-      {
-        name: "ECDSA",
-        namedCurve: "P-256",
-      },
-      false,
-      ["sign"]
-    );
-
-    const signature = await window.crypto.subtle.sign(
-      {
-        name: "ECDSA",
-        hash: { name: "SHA-256" },
-      },
-      privateKey,
-      encode(data)
-    );
-
-    // TODO: Protect from timing attack
-    return arrayBufferToBase64(signature);
-  } catch (error) {
-    // TODO: Return data (garbage in : garbage out)
-    throw new Error("Integrity / Authenticity check failed!");
-  }
+  // TODO: Protect from timing attack
+  return signature;
 };
