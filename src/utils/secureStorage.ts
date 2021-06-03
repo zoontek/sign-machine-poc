@@ -1,6 +1,6 @@
 import { argon2id } from "hash-wasm";
 import { deleteDB, openDB } from "idb";
-import * as ed from "noble-ed25519";
+import tweetnacl from "tweetnacl";
 
 // https://diafygi.github.io/webcrypto-examples/
 // https://github.com/willgm/web-crypto-tools/blob/master/src/web-crypto-tools.ts
@@ -8,10 +8,16 @@ import * as ed from "noble-ed25519";
 // https://github.com/willgm/web-crypto-storage/blob/master/demo/demo.js
 // https://nodejs.org/api/crypto.html#crypto_crypto_verify_algorithm_data_key_signature_callback
 
+const utf8StringToUint8Array = (data: string): Uint8Array =>
+  new TextEncoder().encode(data);
+
+const uint8ArrayToHexString = (data: Uint8Array): string =>
+  Buffer.from(data).toString("hex");
+
 const generateRandomValues = (length: number) =>
   window.crypto.getRandomValues(new Uint8Array(length));
 
-const generatePrivateKeyFromPwAndSalt = async (
+const generateKeyPairFromPwAndSalt = async (
   password: string,
   salt: Uint8Array
 ) => {
@@ -22,11 +28,11 @@ const generatePrivateKeyFromPwAndSalt = async (
     iterations: 256,
     memorySize: 512,
     hashLength: 32,
-    outputType: "hex",
+    outputType: "binary",
   });
 
-  // use password hash as private key
-  return Buffer.from(passwordHash, "hex");
+  // use password hash as seed
+  return tweetnacl.sign.keyPair.fromSeed(passwordHash);
 };
 
 export const initSignMachine = async (password: string): Promise<string> => {
@@ -45,17 +51,14 @@ export const initSignMachine = async (password: string): Promise<string> => {
   // generate random salt
   const salt = generateRandomValues(16);
 
-  // deterministically generate private key from pw and salt
-  const privateKey = await generatePrivateKeyFromPwAndSalt(password, salt);
-
-  // derive public key from it
-  const publicKey = await ed.getPublicKey(privateKey);
+  // deterministically generate key pair from password and salt
+  const { publicKey } = await generateKeyPairFromPwAndSalt(password, salt);
 
   // TODO: send public key to the server
-  // sendPublicKey(publicKey)
+  // sendPublicKey(uint8ArrayToHexString(publicKey))
 
   await database.put(storeName, salt, "salt");
-  return Buffer.from(publicKey).toString("hex");
+  return uint8ArrayToHexString(publicKey);
 };
 
 export const sign = async (password: string, data: string): Promise<string> => {
@@ -69,6 +72,12 @@ export const sign = async (password: string, data: string): Promise<string> => {
     throw new Error("Cannot retrieve salt");
   }
 
-  const privateKey = await generatePrivateKeyFromPwAndSalt(password, salt);
-  return ed.sign(Buffer.from(data).toString("hex"), privateKey);
+  const { secretKey } = await generateKeyPairFromPwAndSalt(password, salt);
+
+  const signature = tweetnacl.sign.detached(
+    utf8StringToUint8Array(data),
+    secretKey
+  );
+
+  return uint8ArrayToHexString(signature);
 };
