@@ -52,7 +52,7 @@ export const initSignMachine = async (
   );
 
   // https://github.com/diafygi/webcrypto-examples/#pbkdf2---derivekey
-  const salt = generateRandomValues(8);
+  const salt = generateRandomValues(16);
 
   const aesGcmKey = await window.crypto.subtle.deriveKey(
     {
@@ -71,7 +71,7 @@ export const initSignMachine = async (
   );
 
   // https://github.com/diafygi/webcrypto-examples/#aes-gcm---wrapkey
-  const wrappedPrivateKeyNonce = generateRandomValues(12);
+  const wrappedPrivateKeyNonce = generateRandomValues(16);
 
   const [wrappedPrivateKey, publicKey] = await Promise.all([
     window.crypto.subtle.wrapKey("pkcs8", ecdsaKey.privateKey, aesGcmKey, {
