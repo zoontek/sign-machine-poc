@@ -13,6 +13,7 @@
     "@emotion/styled": "11.3.0",
     "@simplewebauthn/browser": "3.0.0",
     "@simplewebauthn/server": "3.0.0",
+    "cbor-js": "0.1.0",
     "framer-motion": "4.1.17",
     "idb": "6.1.2",
     "next": "10.2.3",
