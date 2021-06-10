@@ -196,8 +196,8 @@ const Home: FC = () => {
                   ]).buffer,
                   authenticatorSelection: {
                     authenticatorAttachment: "platform",
-                    requireResidentKey: true,
-                    userVerification: "required",
+                    requireResidentKey: true, // https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions/authenticatorSelection#value
+                    userVerification: "discouraged",
                   },
                 },
               })
@@ -261,10 +261,11 @@ const Home: FC = () => {
 
             navigator.credentials
               .get({
-                mediation: "silent",
-                publicKey: {
-                  userVerification: "required",
+                // https://whatwebcando.today/credentials.html
+                mediation: "silent", // https://developer.mozilla.org/en-US/docs/Web/API/CredentialsContainer/get#parameters
 
+                publicKey: {
+                  userVerification: "discouraged",
                   timeout: 60000,
                   // normally the credential IDs available for an account would
                   // come from a server, but we can just copy them from above
