@@ -1,4 +1,3 @@
-import base64ArrayBuffer from "base64-arraybuffer";
 import { deleteDB, openDB } from "idb";
 
 // https://diafygi.github.io/webcrypto-examples/
@@ -7,14 +6,11 @@ import { deleteDB, openDB } from "idb";
 // https://github.com/willgm/web-crypto-storage/blob/master/demo/demo.js
 // https://nodejs.org/api/crypto.html#crypto_crypto_verify_algorithm_data_key_signature_callback
 
-const arrayBufferToBase64 = base64ArrayBuffer.encode;
-const base64ToArrayBuffer = base64ArrayBuffer.decode;
+const stringToArrayBuffer = (data: string): ArrayBuffer =>
+  new TextEncoder().encode(data);
 
-const decode = (data: ArrayBuffer) => new TextDecoder("utf-8").decode(data);
-const encode = (data: string): Uint8Array => new TextEncoder().encode(data);
-
-const generateHash = (data: string): Promise<ArrayBuffer> =>
-  window.crypto.subtle.digest("SHA-256", encode(data));
+const arrayBufferToHexString = (data: ArrayBuffer): string =>
+  Buffer.from(data).toString("hex");
 
 const generateRandomValues = (length: number) =>
   window.crypto.getRandomValues(new Uint8Array(length));
@@ -45,7 +41,7 @@ export const initSignMachine = async (
 
   const pbkdf2Key = await window.crypto.subtle.importKey(
     "raw",
-    encode(password),
+    stringToArrayBuffer(password),
     "PBKDF2",
     false,
     ["deriveKey"]
@@ -108,7 +104,7 @@ export const sign = async (password: string, data: string): Promise<string> => {
 
   const pbkdf2Key = await window.crypto.subtle.importKey(
     "raw",
-    encode(password),
+    stringToArrayBuffer(password),
     "PBKDF2",
     false,
     ["deriveKey"]
@@ -153,11 +149,11 @@ export const sign = async (password: string, data: string): Promise<string> => {
         hash: { name: "SHA-256" },
       },
       privateKey,
-      encode(data)
+      stringToArrayBuffer(data)
     );
 
     // TODO: Protect from timing attack
-    return arrayBufferToBase64(signature);
+    return arrayBufferToHexString(signature);
   } catch (error) {
     // TODO: Return data (garbage in : garbage out)
     throw new Error("Integrity / Authenticity check failed!");
