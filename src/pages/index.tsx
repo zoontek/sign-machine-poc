@@ -196,6 +196,8 @@ const Home: FC = () => {
                   ]).buffer,
                   authenticatorSelection: {
                     authenticatorAttachment: "platform",
+                    requireResidentKey: true,
+                    userVerification: "required",
                   },
                 },
               })
@@ -259,8 +261,10 @@ const Home: FC = () => {
 
             navigator.credentials
               .get({
-                mediation: "optional",
+                mediation: "silent",
                 publicKey: {
+                  userVerification: "required",
+
                   timeout: 60000,
                   // normally the credential IDs available for an account would
                   // come from a server, but we can just copy them from above
@@ -268,12 +272,8 @@ const Home: FC = () => {
                     {
                       id: (credential as unknown as { rawId: ArrayBuffer })
                         .rawId,
-                      // transports: [
-                      //   "usb" as const,
-                      //   "nfc" as const,
-                      //   "ble" as const,
-                      // ],
                       type: "public-key",
+                      transports: ["internal" as const],
                     },
                   ],
                   challenge: new Uint8Array([
