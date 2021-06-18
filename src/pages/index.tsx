@@ -197,7 +197,7 @@ const Home: FC = () => {
                   authenticatorSelection: {
                     authenticatorAttachment: "platform",
                     requireResidentKey: true, // https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions/authenticatorSelection#value
-                    userVerification: "discouraged",
+                    userVerification: "required",
                   },
                 },
               })
@@ -265,7 +265,7 @@ const Home: FC = () => {
                 mediation: "silent", // https://developer.mozilla.org/en-US/docs/Web/API/CredentialsContainer/get#parameters
 
                 publicKey: {
-                  userVerification: "discouraged",
+                  userVerification: "required",
                   timeout: 60000,
                   // normally the credential IDs available for an account would
                   // come from a server, but we can just copy them from above
