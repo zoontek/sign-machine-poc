@@ -1,6 +1,7 @@
-import base64ArrayBuffer from "base64-arraybuffer";
+import srp from "@kapetan/secure-remote-password/client";
 import { argon2id } from "hash-wasm";
 import { deleteDB, openDB } from "idb";
+import { addProof, arrayBufferToBase64, encode, srpParams } from "./common";
 
 // https://diafygi.github.io/webcrypto-examples/
 // https://github.com/willgm/web-crypto-tools/blob/master/src/web-crypto-tools.ts
@@ -8,21 +9,21 @@ import { deleteDB, openDB } from "idb";
 // https://github.com/willgm/web-crypto-storage/blob/master/demo/demo.js
 // https://nodejs.org/api/crypto.html#crypto_crypto_verify_algorithm_data_key_signature_callback
 
-const arrayBufferToBase64 = base64ArrayBuffer.encode;
-const base64ToArrayBuffer = base64ArrayBuffer.decode;
+const derivePrivateKey = async (password: string, salt: string) => {
+  return argon2id({
+    password: password.normalize(),
+    salt,
+    parallelism: 1,
+    iterations: 256,
+    memorySize: 512,
+    hashLength: 32,
+    outputType: "hex",
+  });
+};
 
-const decode = (data: ArrayBuffer) => new TextDecoder("utf-8").decode(data);
-const encode = (data: string): Uint8Array => new TextEncoder().encode(data);
-
-const generateHash = (data: string): Promise<ArrayBuffer> =>
-  window.crypto.subtle.digest("SHA-256", encode(data));
-
-const generateRandomValues = (length: number) =>
-  window.crypto.getRandomValues(new Uint8Array(length));
-
-export const initSignMachine = async (
+export const registerSignMachine = async (
   password: string
-): Promise<JsonWebKey> => {
+): Promise<{ salt: string; verifier: string; publicKey: JsonWebKey }> => {
   const databaseName = "databaseName";
   const storeName = "storeName";
 
@@ -35,6 +36,10 @@ export const initSignMachine = async (
     },
   });
 
+  const salt = srp.generateSalt(srpParams);
+  const srpPrivateKey = await derivePrivateKey(password.normalize(), salt);
+  const verifier = srp.deriveVerifier(srpPrivateKey, srpParams);
+
   const ecdsaKey = await window.crypto.subtle.generateKey(
     {
       name: "ECDSA",
@@ -44,116 +49,104 @@ export const initSignMachine = async (
     ["sign", "verify"]
   );
 
-  const salt = generateRandomValues(16);
+  await database.put(storeName, ecdsaKey.privateKey, "privateKey");
 
-  const passwordHash = await argon2id({
-    password: password.normalize(),
-    salt,
-    parallelism: 1,
-    iterations: 256,
-    memorySize: 512,
-    hashLength: 32,
-    outputType: "binary",
-  });
-
-  const aesGcmKey = await window.crypto.subtle.importKey(
-    "raw",
-    passwordHash,
-    {
-      name: "AES-GCM",
-      length: 256,
-    },
-    false,
-    ["wrapKey"]
+  const publicKey = await window.crypto.subtle.exportKey(
+    "jwk",
+    ecdsaKey.publicKey
   );
 
-  // https://github.com/diafygi/webcrypto-examples/#aes-gcm---wrapkey
-  const wrappedPrivateKeyNonce = generateRandomValues(16);
-
-  const [wrappedPrivateKey, publicKey] = await Promise.all([
-    window.crypto.subtle.wrapKey("pkcs8", ecdsaKey.privateKey, aesGcmKey, {
-      name: "AES-GCM",
-      iv: wrappedPrivateKeyNonce,
+  await fetch("/api/register", {
+    method: "POST",
+    body: JSON.stringify({
+      salt,
+      verifier,
+      publicKey,
     }),
-    window.crypto.subtle.exportKey("jwk", ecdsaKey.publicKey),
-  ]);
+  });
 
-  await Promise.all([
-    database.put(storeName, salt, "salt"),
-    database.put(storeName, wrappedPrivateKey, "wrappedPrivateKey"),
-    database.put(storeName, wrappedPrivateKeyNonce, "wrappedPrivateKey-nonce"),
-  ]);
-
-  return publicKey;
+  return { salt, verifier, publicKey };
 };
 
-export const sign = async (password: string, data: string): Promise<string> => {
+export const sign = async (
+  password: string,
+  data: string
+): Promise<{
+  dataWithProof: string;
+  signatureBase64: string;
+  srpProof: string;
+  srpPublicKey: string;
+}> => {
   const databaseName = "databaseName";
   const storeName = "storeName";
+  const username = "";
 
   const database = await openDB(databaseName, 1);
 
-  const [salt, wrappedPrivateKey, wrappedPrivateKeyNonce] = await Promise.all([
-    database.get(storeName, "salt"),
-    database.get(storeName, "wrappedPrivateKey"),
-    database.get(storeName, "wrappedPrivateKey-nonce"),
-  ]);
+  const privateKey = await database.get(storeName, "privateKey");
 
-  if (!salt || !wrappedPrivateKey || !wrappedPrivateKeyNonce) {
-    throw new Error("Cannot retrieve data");
+  if (!privateKey) {
+    throw new Error("Cannot retrieve private key from db");
   }
 
-  const passwordHash = await argon2id({
-    password: password.normalize(),
-    salt,
-    parallelism: 1,
-    iterations: 256,
-    memorySize: 512,
-    hashLength: 32,
-    outputType: "binary",
+  const clientEphemeral = srp.generateEphemeral(srpParams);
+
+  const res = await fetch("/api/login/start", {
+    method: "POST",
+    body: JSON.stringify({
+      username,
+      clientPublicKey: clientEphemeral.public,
+    }),
   });
 
-  const aesGcmKey = await window.crypto.subtle.importKey(
-    "raw",
-    passwordHash,
-    {
-      name: "AES-GCM",
-      length: 256,
-    },
-    false,
-    ["unwrapKey"]
+  const { salt, serverPublicKey } = await res.json();
+
+  const srpPrivateKey = await derivePrivateKey(password.normalize(), salt);
+
+  const clientSession = srp.deriveSession(
+    clientEphemeral.secret,
+    serverPublicKey,
+    salt,
+    username,
+    srpPrivateKey,
+    srpParams
   );
 
-  try {
-    const privateKey = await window.crypto.subtle.unwrapKey(
-      "pkcs8",
-      wrappedPrivateKey,
-      aesGcmKey,
-      {
-        name: "AES-GCM",
-        iv: wrappedPrivateKeyNonce,
-      },
-      {
-        name: "ECDSA",
-        namedCurve: "P-256",
-      },
-      false,
-      ["sign"]
-    );
+  const dataToSign = addProof(data, clientSession.proof);
 
-    const signature = await window.crypto.subtle.sign(
-      {
-        name: "ECDSA",
-        hash: { name: "SHA-256" },
-      },
-      privateKey,
-      encode(data)
-    );
+  const signatureBuffer = await window.crypto.subtle.sign(
+    {
+      name: "ECDSA",
+      hash: { name: "SHA-256" },
+    },
+    privateKey,
+    encode(dataToSign)
+  );
 
-    // TODO: Protect from timing attack
-    return arrayBufferToBase64(signature);
-  } catch (error) {
-    // TODO: Return data (garbage in : garbage out)
-    throw new Error("Integrity / Authenticity check failed!");
-  }
+  // TODO: Protect from timing attack
+  const signatureBase64 = arrayBufferToBase64(signatureBuffer);
+
+  return {
+    signatureBase64,
+    dataWithProof: dataToSign,
+    srpProof: clientSession.proof,
+    srpPublicKey: clientEphemeral.public,
+  };
+};
+
+export const verifySignature = async (
+  dataWithProof: string,
+  signatureBase64: string
+): Promise<{ signatureIsValid: boolean; serverProof: string | null }> => {
+  const verifyRes = await fetch("/api/login/verify", {
+    method: "POST",
+    body: JSON.stringify({
+      data: dataWithProof,
+      signature: signatureBase64,
+    }),
+  });
+
+  const verifyResBody = await verifyRes.json();
+
+  return verifyResBody;
 };

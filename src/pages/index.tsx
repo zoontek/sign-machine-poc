@@ -11,27 +11,32 @@ import {
   Textarea,
 } from "@chakra-ui/react";
 import * as React from "react";
-import { initSignMachine, sign } from "../utils/secureStorage";
+import {
+  registerSignMachine,
+  sign,
+  verifySignature,
+} from "../utils/secureStorage";
 
 const Home: FC = () => {
   const [password, setPassword] = React.useState("");
 
   const [clientPublicKey, setClientPublicKey] = React.useState("");
-  const [clientDataToSign, setClientDataToSign] = React.useState("");
-  const [clientDataSignature, setClientDataSignature] = React.useState("");
+  const [clientSalt, setClientSalt] = React.useState("");
+  const [clientVerifier, setClientVerifier] = React.useState("");
 
-  const [serverDataToVerify, setServerDataToVerify] = React.useState("");
-  const [serverDataSignature, setServerDataSignature] = React.useState("");
-  const [serverKnownPublicKey, setServerKnownPublicKey] = React.useState("");
+  const [clientDataToSign, setClientDataToSign] = React.useState("");
+  const [
+    clientDataSignatureBase64,
+    setClientDataSignatureBase64,
+  ] = React.useState("");
+  const [clientDataWithProof, setClientDataWithProof] = React.useState("");
+  const [clientSrpProof, setClientSrpProof] = React.useState("");
+  const [clientSrpPublicKey, setClientSrpPublicKey] = React.useState("");
 
   return (
     <Flex flexDirection="column" padding={8} maxWidth={600}>
       <Flex flexDirection="column">
-        <Heading size="xl">Client side</Heading>
-
-        <Box height={8} />
-
-        <Heading size="md">1. Enrollment</Heading>
+        <Heading size="md">1. Registration</Heading>
 
         <Box height={5} />
 
@@ -52,8 +57,12 @@ const Home: FC = () => {
               colorScheme="messenger"
               disabled={password === ""}
               onClick={async () => {
-                const newPublicKey = await initSignMachine(password);
-                setClientPublicKey(JSON.stringify(newPublicKey));
+                const { publicKey, salt, verifier } = await registerSignMachine(
+                  password
+                );
+                setClientPublicKey(JSON.stringify(publicKey));
+                setClientSalt(salt);
+                setClientVerifier(verifier);
               }}
             >
               Enroll
@@ -70,14 +79,20 @@ const Home: FC = () => {
 
       <FormControl id="clientPublicKey">
         <FormLabel>ECDSA publicKey</FormLabel>
-        <Textarea height={150} readOnly={true} value={clientPublicKey} />
-
-        <FormHelperText>
-          Save this as it will not be persisted in the browser
-        </FormHelperText>
+        <Textarea height={10} readOnly={true} value={clientPublicKey} />
       </FormControl>
 
-      <Box height={8} />
+      <FormControl id="salt">
+        <FormLabel>Salt</FormLabel>
+        <Textarea height={10} readOnly={true} value={clientSalt} />
+      </FormControl>
+
+      <FormControl id="verifier">
+        <FormLabel>Verifier (private)</FormLabel>
+        <Textarea height={10} readOnly={true} value={clientVerifier} />
+      </FormControl>
+
+      <Box height={4} />
 
       <Heading size="md">2. Signature</Heading>
 
@@ -102,11 +117,17 @@ const Home: FC = () => {
             const password = prompt("Enter your password");
 
             if (password) {
-              const dataSignature = await sign(password, clientDataToSign);
+              const {
+                dataWithProof,
+                signatureBase64,
+                srpProof,
+                srpPublicKey,
+              } = await sign(password, clientDataToSign);
 
-              if (dataSignature) {
-                setClientDataSignature(dataSignature);
-              }
+              setClientDataWithProof(dataWithProof);
+              setClientDataSignatureBase64(signatureBase64);
+              setClientSrpProof(srpProof);
+              setClientSrpPublicKey(srpPublicKey);
             }
           }}
         >
@@ -118,7 +139,21 @@ const Home: FC = () => {
 
       <FormControl id="clientDataSignature">
         <FormLabel>Data signature</FormLabel>
-        <Textarea height={100} readOnly={true} value={clientDataSignature} />
+        <Textarea
+          height={100}
+          readOnly={true}
+          value={clientDataSignatureBase64}
+        />
+      </FormControl>
+
+      <FormControl id="clientSrpProof">
+        <FormLabel>SRP Proof</FormLabel>
+        <Textarea height={10} readOnly={true} value={clientSrpProof} />
+      </FormControl>
+
+      <FormControl id="clientSrpPublicKey">
+        <FormLabel>SRP Public key</FormLabel>
+        <Textarea height={10} readOnly={true} value={clientSrpPublicKey} />
       </FormControl>
 
       <Box height={8} />
@@ -127,67 +162,27 @@ const Home: FC = () => {
 
       <Box height={8} />
 
-      <Flex flexDirection="column">
-        <Heading>Server side</Heading>
+      <Heading size="md">3. Verification</Heading>
+
+      <Box height={5} />
+
+      <Flex>
+        <Button
+          colorScheme="messenger"
+          disabled={clientDataWithProof === ""}
+          onClick={async () => {
+            const { signatureIsValid, serverProof } = await verifySignature(
+              clientDataWithProof,
+              clientDataSignatureBase64
+            );
+            alert(JSON.stringify({ signatureIsValid, serverProof }));
+          }}
+        >
+          Verify signature
+        </Button>
       </Flex>
 
       <Box height={5} />
-
-      <Input
-        type="text"
-        placeholder="Enter data to verify"
-        value={serverDataToVerify}
-        onChange={(e) => {
-          setServerDataToVerify(e.target.value);
-        }}
-      />
-
-      <Box height={5} />
-
-      <Textarea
-        height={100}
-        placeholder="Enter received data signature"
-        value={serverDataSignature}
-        onChange={(e) => {
-          setServerDataSignature(e.target.value);
-        }}
-      />
-
-      <Box height={5} />
-
-      <Textarea
-        height={150}
-        placeholder="Enter received publicKey"
-        value={serverKnownPublicKey}
-        onChange={(e) => {
-          setServerKnownPublicKey(e.target.value);
-        }}
-      />
-
-      <Box height={5} />
-
-      <Button
-        colorScheme="messenger"
-        disabled={
-          serverDataToVerify === "" ||
-          serverDataSignature === "" ||
-          serverKnownPublicKey === ""
-        }
-        onClick={() => {
-          fetch("/api/verify", {
-            method: "POST",
-            body: JSON.stringify({
-              dataToVerify: serverDataToVerify,
-              dataSignature: serverDataSignature,
-              publicKey: serverKnownPublicKey,
-            }),
-          })
-            .then((res) => res.json())
-            .then((res) => alert(`isValid: ${res.isValid}`));
-        }}
-      >
-        Verify
-      </Button>
     </Flex>
   );
 };
