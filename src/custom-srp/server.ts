@@ -7,11 +7,8 @@ export const generateEphemeral = async (
 ): Promise<Ephemeral> => {
   const { N, g, k } = params;
 
-  // v    Password verifier
-  const v = SRPInt.fromHex(verifier);
-
-  // B = kv + g^b             (b = random number)
-  const b = SRPInt.randomInteger(params.hashOutputBytes);
+  const v = SRPInt.fromHex(verifier); // Password verifier
+  const b = SRPInt.randomInteger(params.hashOutputBytes); // kv + g^b
   const B = (await k).multiply(v).add(g.modPow(b, N)).mod(N);
 
   return {
@@ -30,20 +27,13 @@ export const deriveSession = async (
 ): Promise<Session> => {
   const { N, g, k, H } = params;
 
-  // b    Secret ephemeral values
-  // A    Public ephemeral values
-  // s    User's salt
-  // p    Cleartext Password
-  // I    Username
-  // v    Password verifier
-  const b = SRPInt.fromHex(serverSecretEphemeral);
-  const A = SRPInt.fromHex(clientPublicEphemeral);
-  const s = SRPInt.fromHex(salt);
-  const I = username;
-  const v = SRPInt.fromHex(verifier);
+  const b = SRPInt.fromHex(serverSecretEphemeral); // Secret ephemeral values
+  const A = SRPInt.fromHex(clientPublicEphemeral); // Public ephemeral values
+  const s = SRPInt.fromHex(salt); // User's salt
+  const I = username; // Username
+  const v = SRPInt.fromHex(verifier); // Password verifier
 
-  // B = kv + g^b             (b = random number)
-  const B = (await k).multiply(v).add(g.modPow(b, N)).mod(N);
+  const B = (await k).multiply(v).add(g.modPow(b, N)).mod(N); // kv + g^b
 
   // A % N > 0
   if (A.mod(N).equals(SRPInt.ZERO)) {
@@ -51,16 +41,11 @@ export const deriveSession = async (
     throw new Error("The client sent an invalid public ephemeral");
   }
 
-  // u = H(A, B)
   const u = await H(A, B);
-
-  // S = (Av^u) ^ b              (computes session key)
-  const S = A.multiply(v.modPow(u, N)).modPow(b, N);
-
-  // K = H(S)
+  const S = A.multiply(v.modPow(u, N)).modPow(b, N); // (Av^u) ^ b (computes session key)
   const K = await H(S);
 
-  // M = H(H(N) xor H(g), H(I), s, A, B, K)
+  // H(H(N) xor H(g), H(I), s, A, B, K)
   const M = await H((await H(N)).xor(await H(g)), await H(I), s, A, B, K);
 
   const expected = M;
@@ -71,7 +56,6 @@ export const deriveSession = async (
     throw new Error("Client provided session proof is invalid");
   }
 
-  // P = H(A, M, K)
   const P = await H(A, M, K);
 
   return {
