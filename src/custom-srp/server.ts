@@ -43,10 +43,11 @@ export const deriveSession = async (
 
   const u = await H(A, B);
   const S = A.multiply(v.modPow(u, N)).modPow(b, N); // (Av^u) ^ b (computes session key)
-  const K = await H(S);
+
+  const [K, HofN, Hofg, HofI] = await Promise.all([H(S), H(N), H(g), H(I)]);
 
   // H(H(N) xor H(g), H(I), s, A, B, K)
-  const M = await H((await H(N)).xor(await H(g)), await H(I), s, A, B, K);
+  const M = await H(HofN.xor(Hofg), HofI, s, A, B, K);
 
   const expected = M;
   const actual = SRPInt.fromHex(clientSessionProof);
