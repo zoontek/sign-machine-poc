@@ -23,16 +23,16 @@ export class SRPInteger {
     return SRPInteger.fromHex(randomHex(bytes));
   }
 
-  add(val: SRPInteger) {
-    return new SRPInteger(this[kBigInteger].add(val[kBigInteger]), null);
+  add(value: SRPInteger) {
+    return new SRPInteger(this[kBigInteger].add(value[kBigInteger]), null);
   }
 
-  equals(val: SRPInteger) {
-    return this[kBigInteger].equals(val[kBigInteger]);
+  equals(value: SRPInteger) {
+    return this[kBigInteger].equals(value[kBigInteger]);
   }
 
-  multiply(val: SRPInteger) {
-    return new SRPInteger(this[kBigInteger].multiply(val[kBigInteger]), null);
+  mod(m: SRPInteger) {
+    return new SRPInteger(this[kBigInteger].mod(m[kBigInteger]), m[kHexLength]);
   }
 
   modPow(exponent: SRPInteger, m: SRPInteger) {
@@ -42,20 +42,20 @@ export class SRPInteger {
     );
   }
 
-  mod(m: SRPInteger) {
-    return new SRPInteger(this[kBigInteger].mod(m[kBigInteger]), m[kHexLength]);
+  multiply(value: SRPInteger) {
+    return new SRPInteger(this[kBigInteger].multiply(value[kBigInteger]), null);
   }
 
-  subtract(val: SRPInteger) {
+  subtract(value: SRPInteger) {
     return new SRPInteger(
-      this[kBigInteger].subtract(val[kBigInteger]),
+      this[kBigInteger].subtract(value[kBigInteger]),
       this[kHexLength]
     );
   }
 
-  xor(val: SRPInteger) {
+  xor(value: SRPInteger) {
     return new SRPInteger(
-      this[kBigInteger].xor(val[kBigInteger]),
+      this[kBigInteger].xor(value[kBigInteger]),
       this[kHexLength]
     );
   }
