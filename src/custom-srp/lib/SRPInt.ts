@@ -23,9 +23,7 @@ export class SRPInt {
   static randomInteger() {
     const view = new Uint8Array(256 / 8);
     crypto.getRandomValues(view);
-
-    const hex = bufferToHex(view.buffer);
-    return SRPInt.fromHex(hex);
+    return SRPInt.fromHex(bufferToHex(view.buffer));
   }
 
   add(value: SRPInt) {
