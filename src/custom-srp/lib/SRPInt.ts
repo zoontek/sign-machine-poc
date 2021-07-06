@@ -36,14 +36,14 @@ export class SRPInt {
     return this[kBigInt].equals(value[kBigInt]);
   }
 
-  mod(m: SRPInt) {
-    return new SRPInt(this[kBigInt].mod(m[kBigInt]), m[kHexLength]);
+  mod(modulus: SRPInt) {
+    return new SRPInt(this[kBigInt].mod(modulus[kBigInt]), modulus[kHexLength]);
   }
 
-  modPow(exponent: SRPInt, m: SRPInt) {
+  modPow(exponent: SRPInt, modulus: SRPInt) {
     return new SRPInt(
-      this[kBigInt].modPow(exponent[kBigInt], m[kBigInt]),
-      m[kHexLength]
+      this[kBigInt].modPow(exponent[kBigInt], modulus[kBigInt]),
+      modulus[kHexLength]
     );
   }
 
