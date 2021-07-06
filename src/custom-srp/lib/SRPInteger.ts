@@ -61,12 +61,12 @@ export class SRPInteger {
   }
 
   toHex() {
-    const hexLength = this[kHexLength];
+    const maxLength = this[kHexLength];
 
-    if (hexLength === null) {
+    if (maxLength === null) {
       throw new Error("This SRPInteger has no specified length");
     }
 
-    return this[kBigInteger].toString(16).padStart(hexLength, "0");
+    return this[kBigInteger].toString(16).padStart(maxLength, "0");
   }
 }
