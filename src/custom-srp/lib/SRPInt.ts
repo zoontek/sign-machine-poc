@@ -1,4 +1,5 @@
 import { BigInteger } from "jsbn";
+import { crypto } from "./crypto";
 import { arrayBufferToHex } from "./hex";
 
 const kBigInt = Symbol("bigInt");
