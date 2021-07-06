@@ -1,15 +1,6 @@
 import { params } from "./lib/params";
 import { SRPInteger } from "./lib/srp-integer";
-
-export type Ephemeral = {
-  public: string;
-  secret: string;
-};
-
-export type Session = {
-  key: string;
-  proof: string;
-};
+import { Ephemeral, Session } from "./types";
 
 export const generateSalt = (): string => {
   // s    User's salt
