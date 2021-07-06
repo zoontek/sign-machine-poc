@@ -1,10 +1,10 @@
 import { params } from "./lib/params";
-import { SRPInteger } from "./lib/SRPInteger";
+import { SRPInt } from "./lib/SRPInt";
 import { Ephemeral, Session } from "./types";
 
 export const generateSalt = (): string => {
   // s    User's salt
-  const s = SRPInteger.randomInteger(params.hashOutputBytes);
+  const s = SRPInt.randomInteger(params.hashOutputBytes);
 
   return s.toHex();
 };
@@ -15,7 +15,7 @@ export const deriveVerifier = (privateKey: string): string => {
   const { N, g } = params;
 
   // x    Private key (derived from p and s)
-  const x = SRPInteger.fromHex(privateKey);
+  const x = SRPInt.fromHex(privateKey);
 
   // v = g^x                   (computes password verifier)
   const v = g.modPow(x, N);
@@ -29,7 +29,7 @@ export const generateEphemeral = (): Ephemeral => {
   const { N, g } = params;
 
   // A = g^a                  (a = random number)
-  const a = SRPInteger.randomInteger(params.hashOutputBytes);
+  const a = SRPInt.randomInteger(params.hashOutputBytes);
   const A = g.modPow(a, N);
 
   return {
@@ -56,17 +56,17 @@ export const deriveSession = async (
   // s    User's salt
   // I    Username
   // x    Private key (derived from p and s)
-  const a = SRPInteger.fromHex(clientSecretEphemeral);
-  const B = SRPInteger.fromHex(serverPublicEphemeral);
-  const s = SRPInteger.fromHex(salt);
+  const a = SRPInt.fromHex(clientSecretEphemeral);
+  const B = SRPInt.fromHex(serverPublicEphemeral);
+  const s = SRPInt.fromHex(salt);
   const I = String(username);
-  const x = SRPInteger.fromHex(privateKey);
+  const x = SRPInt.fromHex(privateKey);
 
   // A = g^a                  (a = random number)
   const A = g.modPow(a, N);
 
   // B % N > 0
-  if (B.mod(N).equals(SRPInteger.ZERO)) {
+  if (B.mod(N).equals(SRPInt.ZERO)) {
     // fixme: .code, .statusCode, etc.
     throw new Error("The server sent an invalid public ephemeral");
   }
@@ -103,13 +103,13 @@ export const verifySession = async (
   // A    Public ephemeral values
   // M    Proof of K
   // K    Shared, strong session key
-  const A = SRPInteger.fromHex(clientPublicEphemeral);
-  const M = SRPInteger.fromHex(clientSession.proof);
-  const K = SRPInteger.fromHex(clientSession.key);
+  const A = SRPInt.fromHex(clientPublicEphemeral);
+  const M = SRPInt.fromHex(clientSession.proof);
+  const K = SRPInt.fromHex(clientSession.key);
 
   // H(A, M, K)
   const expected = await H(A, M, K);
-  const actual = SRPInteger.fromHex(serverSessionProof);
+  const actual = SRPInt.fromHex(serverSessionProof);
 
   if (!actual.equals(expected)) {
     // fixme: .code, .statusCode, etc.

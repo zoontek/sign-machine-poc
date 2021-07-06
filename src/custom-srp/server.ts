@@ -1,5 +1,5 @@
 import { params } from "./lib/params";
-import { SRPInteger } from "./lib/SRPInteger";
+import { SRPInt } from "./lib/SRPInt";
 import { Ephemeral, Session } from "./types";
 
 export const generateEphemeral = async (
@@ -11,10 +11,10 @@ export const generateEphemeral = async (
   const { N, g, k } = params;
 
   // v    Password verifier
-  const v = SRPInteger.fromHex(verifier);
+  const v = SRPInt.fromHex(verifier);
 
   // B = kv + g^b             (b = random number)
-  const b = SRPInteger.randomInteger(params.hashOutputBytes);
+  const b = SRPInt.randomInteger(params.hashOutputBytes);
   const B = (await k).multiply(v).add(g.modPow(b, N)).mod(N);
 
   return {
@@ -43,17 +43,17 @@ export const deriveSession = async (
   // p    Cleartext Password
   // I    Username
   // v    Password verifier
-  const b = SRPInteger.fromHex(serverSecretEphemeral);
-  const A = SRPInteger.fromHex(clientPublicEphemeral);
-  const s = SRPInteger.fromHex(salt);
+  const b = SRPInt.fromHex(serverSecretEphemeral);
+  const A = SRPInt.fromHex(clientPublicEphemeral);
+  const s = SRPInt.fromHex(salt);
   const I = String(username);
-  const v = SRPInteger.fromHex(verifier);
+  const v = SRPInt.fromHex(verifier);
 
   // B = kv + g^b             (b = random number)
   const B = (await k).multiply(v).add(g.modPow(b, N)).mod(N);
 
   // A % N > 0
-  if (A.mod(N).equals(SRPInteger.ZERO)) {
+  if (A.mod(N).equals(SRPInt.ZERO)) {
     // fixme: .code, .statusCode, etc.
     throw new Error("The client sent an invalid public ephemeral");
   }
@@ -71,7 +71,7 @@ export const deriveSession = async (
   const M = await H((await H(N)).xor(await H(g)), await H(I), s, A, B, K);
 
   const expected = M;
-  const actual = SRPInteger.fromHex(clientSessionProof);
+  const actual = SRPInt.fromHex(clientSessionProof);
 
   if (!actual.equals(expected)) {
     // fixme: .code, .statusCode, etc.

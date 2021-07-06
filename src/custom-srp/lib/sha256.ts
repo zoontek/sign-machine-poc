@@ -1,9 +1,9 @@
 import { encodeUtf8 } from "../../utils/common";
 import { crypto } from "./crypto";
 import { arrayBufferToHex, hexToArrayBuffer } from "./hex";
-import { SRPInteger } from "./SRPInteger";
+import { SRPInt } from "./SRPInt";
 
-export const sha256 = async (...args: (SRPInteger | string)[]) => {
+export const sha256 = async (...args: (SRPInt | string)[]) => {
   const buffers: ArrayBuffer[] = args.map((arg) =>
     typeof arg === "string" ? encodeUtf8(arg) : hexToArrayBuffer(arg.toHex())
   );
@@ -17,7 +17,7 @@ export const sha256 = async (...args: (SRPInteger | string)[]) => {
     return offset + buffer.byteLength;
   }, 0);
 
-  return SRPInteger.fromHex(
+  return SRPInt.fromHex(
     arrayBufferToHex(await crypto.subtle.digest("SHA-256", combined.buffer))
   );
 };
