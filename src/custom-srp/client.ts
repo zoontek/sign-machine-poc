@@ -3,7 +3,7 @@ import { SRPInt } from "./lib/SRPInt";
 import { Ephemeral, Session } from "./types";
 
 export const generateSalt = (): string => {
-  const s = SRPInt.randomInteger(params.hashOutputBytes); // User's salt
+  const s = SRPInt.randomInteger(); // User's salt
   return s.toHex();
 };
 
@@ -18,7 +18,7 @@ export const deriveVerifier = (privateKey: string): string => {
 export const generateEphemeral = (): Ephemeral => {
   const { N, g } = params;
 
-  const a = SRPInt.randomInteger(params.hashOutputBytes);
+  const a = SRPInt.randomInteger();
   const A = g.modPow(a, N); // g^a
 
   return {

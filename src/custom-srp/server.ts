@@ -8,7 +8,7 @@ export const generateEphemeral = async (
   const { N, g, k } = params;
 
   const v = SRPInt.fromHex(verifier); // Password verifier
-  const b = SRPInt.randomInteger(params.hashOutputBytes); // kv + g^b
+  const b = SRPInt.randomInteger(); // kv + g^b
   const B = (await k).multiply(v).add(g.modPow(b, N)).mod(N);
 
   return {

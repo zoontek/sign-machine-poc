@@ -2,8 +2,6 @@
 // https://github.com/LinusU/crypto-random-hex
 // https://github.com/LinusU/hex-to-array-buffer
 
-import { crypto } from "./crypto";
-
 export const arrayBufferToHex = (arrayBuffer: ArrayBuffer) => {
   const view = new Uint8Array(arrayBuffer);
   let result = "";
@@ -28,10 +26,4 @@ export const hexToArrayBuffer = (hex: string) => {
   }
 
   return view.buffer;
-};
-
-export const randomHex = (bytes: number): string => {
-  const view = new Uint8Array(bytes);
-  crypto.getRandomValues(view);
-  return arrayBufferToHex(view.buffer);
 };

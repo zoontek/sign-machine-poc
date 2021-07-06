@@ -24,5 +24,4 @@ export const params = {
   g, // A generator modulo N
   k, // Multiplier parameter (k = H(N, g) in SRP-6a, k = 3 for legacy SRP-6)
   H: sha256, // One-way hash function
-  hashOutputBytes: 256 / 8,
 };
