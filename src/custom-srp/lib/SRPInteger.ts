@@ -60,12 +60,6 @@ export class SRPInteger {
     );
   }
 
-  inspect() {
-    const hex = this[kBigInteger].toString(16);
-
-    return `<SRPInteger ${hex.slice(0, 16)}${hex.length > 16 ? "..." : ""}>`;
-  }
-
   toHex() {
     const hexLength = this[kHexLength];
 

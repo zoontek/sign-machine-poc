@@ -9,7 +9,10 @@ import { addProof, arrayBufferToBase64, encodeUtf8 } from "./common";
 // https://github.com/willgm/web-crypto-storage/blob/master/demo/demo.js
 // https://nodejs.org/api/crypto.html#crypto_crypto_verify_algorithm_data_key_signature_callback
 
-const derivePrivateKey = async (password: string, salt: string) => {
+const derivePrivateKey = async (
+  password: string,
+  salt: string
+): Promise<string> => {
   return argon2id({
     password: password.normalize(),
     salt,

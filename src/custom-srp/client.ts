@@ -9,27 +9,6 @@ export const generateSalt = (): string => {
   return s.toHex();
 };
 
-export const derivePrivateKey = async (
-  salt: string,
-  username: string,
-  password: string
-): Promise<string> => {
-  // H()  One-way hash function
-  const { H } = params;
-
-  // s    User's salt
-  // I    Username
-  // p    Cleartext Password
-  const s = SRPInteger.fromHex(salt);
-  const I = String(username);
-  const p = String(password);
-
-  // x = H(s, H(I | ':' | p))  (s is chosen randomly)
-  const x = await H(s, await H(`${I}:${p}`));
-
-  return x.toHex();
-};
-
 export const deriveVerifier = (privateKey: string): string => {
   // N    A large safe prime (N = 2q+1, where q is prime)
   // g    A generator modulo N
