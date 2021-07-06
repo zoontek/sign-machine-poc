@@ -1,9 +1,9 @@
 import base64ArrayBuffer from "base64-arraybuffer";
 
-export const decode = (data: ArrayBuffer) =>
+export const decodeUtf8 = (data: ArrayBuffer) =>
   new TextDecoder("utf-8").decode(data);
 
-export const encode = (data: string): Uint8Array =>
+export const encodeUtf8 = (data: string): Uint8Array =>
   new TextEncoder().encode(data);
 
 export const arrayBufferToBase64 = base64ArrayBuffer.encode;

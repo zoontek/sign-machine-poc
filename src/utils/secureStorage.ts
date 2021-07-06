@@ -1,7 +1,7 @@
 import { argon2id } from "hash-wasm";
 import { deleteDB, openDB } from "idb";
 import * as srpClient from "../custom-srp/client";
-import { addProof, arrayBufferToBase64, encode } from "./common";
+import { addProof, arrayBufferToBase64, encodeUtf8 } from "./common";
 
 // https://diafygi.github.io/webcrypto-examples/
 // https://github.com/willgm/web-crypto-tools/blob/master/src/web-crypto-tools.ts
@@ -119,7 +119,7 @@ export const sign = async (
       hash: { name: "SHA-256" },
     },
     privateKey,
-    encode(dataToSign)
+    encodeUtf8(dataToSign)
   );
 
   // TODO: Protect from timing attack

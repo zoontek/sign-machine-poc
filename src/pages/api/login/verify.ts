@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import * as srpServer from "../../../custom-srp/server";
 import {
   base64ToArrayBuffer,
-  encode,
+  encodeUtf8,
   extractProof,
 } from "../../../utils/common";
 import { getLoginData, getRegisterData } from "../db";
@@ -53,7 +53,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     { name: "ECDSA", hash: { name: "SHA-256" } },
     importedPublicKey,
     base64ToArrayBuffer(body.signature),
-    encode(body.data)
+    encodeUtf8(body.data)
   );
 
   res.status(200).json({ signatureIsValid, serverProof });

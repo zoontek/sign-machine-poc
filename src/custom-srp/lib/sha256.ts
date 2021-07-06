@@ -1,6 +1,6 @@
 import rawSha256 from "crypto-digest-sync/sha256";
+import { encodeUtf8 } from "../../utils/common";
 import { arrayBufferToHex } from "./arrayBufferToHex";
-import { encodeUtf8 } from "./encodeUtf8";
 import { hexToArrayBuffer } from "./hexToArrayBuffer";
 import { SRPInteger } from "./SRPInteger";
 
