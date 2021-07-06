@@ -28,7 +28,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
   let serverProof = null;
   try {
     // throws if the client proof is wrong
-    const serverSession = srpServer.deriveSession(
+    const serverSession = await srpServer.deriveSession(
       serverSecretKey,
       clientPublicKey,
       salt,

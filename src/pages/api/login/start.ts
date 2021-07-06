@@ -13,7 +13,9 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
   const registerData = getRegisterData();
 
-  const serverEphemeral = srpServer.generateEphemeral(registerData.verifier);
+  const serverEphemeral = await srpServer.generateEphemeral(
+    registerData.verifier
+  );
 
   setLoginData({
     clientPublicKey: body.clientPublicKey,

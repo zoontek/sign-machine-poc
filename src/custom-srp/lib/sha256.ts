@@ -1,6 +1,6 @@
-import rawSha256 from "crypto-digest-sync/sha256";
 import { encodeUtf8 } from "../../utils/common";
 import { arrayBufferToHex } from "./arrayBufferToHex";
+import { crypto } from "./crypto";
 import { hexToArrayBuffer } from "./hexToArrayBuffer";
 import { SRPInteger } from "./SRPInteger";
 
@@ -16,7 +16,7 @@ const concat = (buffers: ArrayBuffer[]) => {
   return combined.buffer;
 };
 
-export const sha256 = (...args: (SRPInteger | string)[]) => {
+export const sha256 = async (...args: (SRPInteger | string)[]) => {
   const buffer = concat(
     args.map((arg) => {
       if (arg instanceof SRPInteger) {
@@ -29,5 +29,6 @@ export const sha256 = (...args: (SRPInteger | string)[]) => {
     })
   );
 
-  return SRPInteger.fromHex(arrayBufferToHex(rawSha256(buffer)));
+  const hash = await crypto.subtle.digest("SHA-256", buffer);
+  return SRPInteger.fromHex(arrayBufferToHex(hash));
 };

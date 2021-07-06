@@ -9,11 +9,11 @@ export const generateSalt = (): string => {
   return s.toHex();
 };
 
-export const derivePrivateKey = (
+export const derivePrivateKey = async (
   salt: string,
   username: string,
   password: string
-): string => {
+): Promise<string> => {
   // H()  One-way hash function
   const { H } = params;
 
@@ -25,7 +25,7 @@ export const derivePrivateKey = (
   const p = String(password);
 
   // x = H(s, H(I | ':' | p))  (s is chosen randomly)
-  const x = H(s, H(`${I}:${p}`));
+  const x = await H(s, await H(`${I}:${p}`));
 
   return x.toHex();
 };
@@ -59,13 +59,13 @@ export const generateEphemeral = (): Ephemeral => {
   };
 };
 
-export const deriveSession = (
+export const deriveSession = async (
   clientSecretEphemeral: string,
   serverPublicEphemeral: string,
   salt: string,
   username: string,
   privateKey: string
-): Session => {
+): Promise<Session> => {
   // N    A large safe prime (N = 2q+1, where q is prime)
   // g    A generator modulo N
   // k    Multiplier parameter (k = H(N, g) in SRP-6a, k = 3 for legacy SRP-6)
@@ -93,19 +93,19 @@ export const deriveSession = (
   }
 
   // u = H(A, B)
-  const u = H(A, B);
+  const u = await H(A, B);
 
   // S = (B - kg^x) ^ (a + ux)
-  const S = B.subtract(k.multiply(g.modPow(x, N))).modPow(
+  const S = B.subtract((await k).multiply(g.modPow(x, N))).modPow(
     a.add(u.multiply(x)),
     N
   );
 
   // K = H(S)
-  const K = H(S);
+  const K = await H(S);
 
   // M = H(H(N) xor H(g), H(I), s, A, B, K)
-  const M = H(H(N).xor(H(g)), H(I), s, A, B, K);
+  const M = await H((await H(N)).xor(await H(g)), await H(I), s, A, B, K);
 
   return {
     key: K.toHex(),
@@ -113,11 +113,11 @@ export const deriveSession = (
   };
 };
 
-export const verifySession = (
+export const verifySession = async (
   clientPublicEphemeral: string,
   clientSession: Session,
   serverSessionProof: string
-): void => {
+): Promise<void> => {
   // H()  One-way hash function
   const { H } = params;
 
@@ -129,7 +129,7 @@ export const verifySession = (
   const K = SRPInteger.fromHex(clientSession.key);
 
   // H(A, M, K)
-  const expected = H(A, M, K);
+  const expected = await H(A, M, K);
   const actual = SRPInteger.fromHex(serverSessionProof);
 
   if (!actual.equals(expected)) {

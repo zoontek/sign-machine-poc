@@ -103,7 +103,7 @@ export const sign = async (
 
   const srpPrivateKey = await derivePrivateKey(password.normalize(), salt);
 
-  const clientSession = srpClient.deriveSession(
+  const clientSession = await srpClient.deriveSession(
     clientEphemeral.secret,
     serverPublicKey,
     salt,

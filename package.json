@@ -14,7 +14,6 @@
     "@emotion/react": "11.4.0",
     "@emotion/styled": "11.3.0",
     "base64-arraybuffer": "0.2.0",
-    "crypto-digest-sync": "1.0.0",
     "framer-motion": "4.1.17",
     "hash-wasm": "4.8.0",
     "idb": "6.1.2",
