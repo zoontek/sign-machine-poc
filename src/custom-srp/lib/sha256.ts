@@ -1,11 +1,11 @@
 import { encodeUtf8 } from "../../utils/common";
 import { crypto } from "./crypto";
-import { bufferToHex, hexToBuffer } from "./hex";
+import { bufToHex, hexToBuf } from "./hex";
 import { SRPInt } from "./SRPInt";
 
 export const sha256 = async (...args: (SRPInt | string)[]) => {
   const buffers = args.map((arg) =>
-    typeof arg === "string" ? encodeUtf8(arg) : hexToBuffer(arg.toHex())
+    typeof arg === "string" ? encodeUtf8(arg) : hexToBuf(arg.toHex())
   );
 
   const combined = new Uint8Array(
@@ -18,6 +18,6 @@ export const sha256 = async (...args: (SRPInt | string)[]) => {
   }, 0);
 
   return SRPInt.fromHex(
-    bufferToHex(await crypto.subtle.digest("SHA-256", combined.buffer))
+    bufToHex(await crypto.subtle.digest("SHA-256", combined.buffer))
   );
 };
