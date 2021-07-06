@@ -1,6 +1,6 @@
 import { argon2id } from "hash-wasm";
 import { deleteDB, openDB } from "idb";
-import srp from "secure-remote-password/client";
+import * as srpClient from "../custom-srp/client";
 import { addProof, arrayBufferToBase64, encode } from "./common";
 
 // https://diafygi.github.io/webcrypto-examples/
@@ -36,9 +36,9 @@ export const registerSignMachine = async (
     },
   });
 
-  const salt = srp.generateSalt();
+  const salt = srpClient.generateSalt();
   const srpPrivateKey = await derivePrivateKey(password.normalize(), salt);
-  const verifier = srp.deriveVerifier(srpPrivateKey);
+  const verifier = srpClient.deriveVerifier(srpPrivateKey);
 
   const ecdsaKey = await window.crypto.subtle.generateKey(
     {
@@ -89,7 +89,7 @@ export const sign = async (
     throw new Error("Cannot retrieve private key from db");
   }
 
-  const clientEphemeral = srp.generateEphemeral();
+  const clientEphemeral = srpClient.generateEphemeral();
 
   const res = await fetch("/api/login/start", {
     method: "POST",
@@ -103,7 +103,7 @@ export const sign = async (
 
   const srpPrivateKey = await derivePrivateKey(password.normalize(), salt);
 
-  const clientSession = srp.deriveSession(
+  const clientSession = srpClient.deriveSession(
     clientEphemeral.secret,
     serverPublicKey,
     salt,
