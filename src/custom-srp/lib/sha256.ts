@@ -3,31 +3,21 @@ import { crypto } from "./crypto";
 import { arrayBufferToHex, hexToArrayBuffer } from "./hex";
 import { SRPInteger } from "./SRPInteger";
 
-const concat = (buffers: ArrayBuffer[]) => {
-  const length = buffers.reduce((mem, item) => mem + item.byteLength, 0);
-  const combined = new Uint8Array(length);
-
-  buffers.reduce((offset, item) => {
-    combined.set(new Uint8Array(item), offset);
-    return offset + item.byteLength;
-  }, 0);
-
-  return combined.buffer;
-};
-
 export const sha256 = async (...args: (SRPInteger | string)[]) => {
-  const buffer = concat(
-    args.map((arg) => {
-      if (arg instanceof SRPInteger) {
-        return hexToArrayBuffer(arg.toHex());
-      } else if (typeof arg === "string") {
-        return encodeUtf8(arg);
-      } else {
-        throw new TypeError("Expected string or SRPInteger");
-      }
-    })
+  const buffers: ArrayBuffer[] = args.map((arg) =>
+    typeof arg === "string" ? encodeUtf8(arg) : hexToArrayBuffer(arg.toHex())
   );
 
-  const hash = await crypto.subtle.digest("SHA-256", buffer);
-  return SRPInteger.fromHex(arrayBufferToHex(hash));
+  const combined = new Uint8Array(
+    buffers.reduce((offset, buffer) => offset + buffer.byteLength, 0)
+  );
+
+  buffers.reduce((offset, buffer) => {
+    combined.set(new Uint8Array(buffer), offset);
+    return offset + buffer.byteLength;
+  }, 0);
+
+  return SRPInteger.fromHex(
+    arrayBufferToHex(await crypto.subtle.digest("SHA-256", combined.buffer))
+  );
 };
