@@ -50,7 +50,12 @@ export const deriveSession = async (
     throw new Error("The server sent an invalid public ephemeral");
   }
 
-  const [u, HofN, Hofg, HofI] = await Promise.all([H(A, B), H(N), H(g), H(I)]);
+  const [u, NHash, gHash, IHash] = await Promise.all([
+    H(A, B),
+    H(N),
+    H(g),
+    H(I),
+  ]);
 
   // (B - kg^x) ^ (a + ux)
   const S = B.subtract((await k).multiply(g.modPow(x, N))).modPow(
@@ -61,7 +66,7 @@ export const deriveSession = async (
   const K = await H(S);
 
   // H(H(N) xor H(g), H(I), s, A, B, K)
-  const M = await H(HofN.xor(Hofg), HofI, s, A, B, K);
+  const M = await H(NHash.xor(gHash), IHash, s, A, B, K);
 
   return {
     key: K.toHex(),
