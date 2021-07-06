@@ -7,7 +7,7 @@ import {
   extractProof,
 } from "../../../utils/common";
 import { getLoginData, getRegisterData } from "../db";
-const crypto = require("crypto").webcrypto;
+const crypto: typeof window["crypto"] = require("crypto").webcrypto;
 
 type LoginVerifyBody = {
   data: string; // data contains the proof
