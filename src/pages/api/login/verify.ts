@@ -1,11 +1,10 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import srpServer from "@kapetan/secure-remote-password/server";
 import type { NextApiRequest, NextApiResponse } from "next";
+import srpServer from "secure-remote-password/server";
 import {
   base64ToArrayBuffer,
   encode,
   extractProof,
-  srpParams,
 } from "../../../utils/common";
 import { getLoginData, getRegisterData } from "../db";
 const crypto = require("crypto").webcrypto;
@@ -35,8 +34,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       salt,
       "",
       verifier,
-      proof,
-      srpParams
+      proof
     );
     serverProof = serverSession.proof;
   } catch (err) {

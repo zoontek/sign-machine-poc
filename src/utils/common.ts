@@ -1,4 +1,3 @@
-import initSrpParams from "@kapetan/secure-remote-password/parameters";
 import base64ArrayBuffer from "base64-arraybuffer";
 
 export const decode = (data: ArrayBuffer) =>
@@ -9,8 +8,6 @@ export const encode = (data: string): Uint8Array =>
 
 export const arrayBufferToBase64 = base64ArrayBuffer.encode;
 export const base64ToArrayBuffer = base64ArrayBuffer.decode;
-
-export const srpParams = initSrpParams(2048);
 
 const PROOF_SEPARATOR = "__PROOF__";
 

@@ -770,19 +770,6 @@
   resolved "https://registry.yarnpkg.com/@hapi/hoek/-/hoek-9.2.0.tgz#f3933a44e365864f4dad5db94158106d511e8131"
   integrity sha512-sqKVVVOe5ivCaXDWivIJYVSaEgdQK9ul7a4Kity5Iw7u9+wBAPbX1RMSnLLmp7O4Vzj0WOWwMAJsTL00xwaNug==
 
-"@kapetan/secure-remote-password@1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@kapetan/secure-remote-password/-/secure-remote-password-1.0.1.tgz#c35b9ea3b54861578446579521e36b268bc8249d"
-  integrity sha512-1Dx3NJBS2mmZBSqLe1bMY6o7iyk7Jrp6sY0F9tnHAc8cRg20l7fDLgj9HdDdJEM/kvguIV0nzXbL8EheWscdfg==
-  dependencies:
-    array-buffer-to-hex "^1.0.0"
-    crypto-digest-sync "^1.0.0"
-    crypto-random-hex "^1.0.0"
-    encode-utf8 "^1.0.1"
-    hex-to-array-buffer "^1.1.0"
-    jsbn "^1.1.0"
-    pad-start "^1.0.2"
-
 "@next/env@10.1.3":
   version "10.1.3"
   resolved "https://registry.yarnpkg.com/@next/env/-/env-10.1.3.tgz#29e5d62919b4a7b1859f8d36169848dc3f5ddebe"
@@ -2659,6 +2646,19 @@ scheduler@^0.20.2:
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
+
+secure-remote-password@0.3.1:
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/secure-remote-password/-/secure-remote-password-0.3.1.tgz#8212e9411149e7fefaaa940a7e581de4e963e251"
+  integrity sha512-iEp/qLRfb9XYhfKFrPFfdeD7KVreCjhDKSTRP1G1nRIO0Sw1hjnVHD58ymOhiy9Zf5quHbDIbG9cTupji7qwnA==
+  dependencies:
+    array-buffer-to-hex "^1.0.0"
+    crypto-digest-sync "^1.0.0"
+    crypto-random-hex "^1.0.0"
+    encode-utf8 "^1.0.1"
+    hex-to-array-buffer "^1.1.0"
+    jsbn "^1.1.0"
+    pad-start "^1.0.2"
 
 semver@^6.0.0:
   version "6.3.0"
