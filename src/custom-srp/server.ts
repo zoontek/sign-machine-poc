@@ -46,7 +46,7 @@ export const deriveSession = async (
   const b = SRPInt.fromHex(serverSecretEphemeral);
   const A = SRPInt.fromHex(clientPublicEphemeral);
   const s = SRPInt.fromHex(salt);
-  const I = String(username);
+  const I = username;
   const v = SRPInt.fromHex(verifier);
 
   // B = kv + g^b             (b = random number)

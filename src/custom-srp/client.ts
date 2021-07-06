@@ -59,7 +59,7 @@ export const deriveSession = async (
   const a = SRPInt.fromHex(clientSecretEphemeral);
   const B = SRPInt.fromHex(serverPublicEphemeral);
   const s = SRPInt.fromHex(salt);
-  const I = String(username);
+  const I = username;
   const x = SRPInt.fromHex(privateKey);
 
   // A = g^a                  (a = random number)
