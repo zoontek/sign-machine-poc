@@ -10,8 +10,6 @@ export const generateSalt = (): string => {
 };
 
 export const deriveVerifier = (privateKey: string): string => {
-  // N    A large safe prime (N = 2q+1, where q is prime)
-  // g    A generator modulo N
   const { N, g } = params;
 
   // x    Private key (derived from p and s)
@@ -24,8 +22,6 @@ export const deriveVerifier = (privateKey: string): string => {
 };
 
 export const generateEphemeral = (): Ephemeral => {
-  // N    A large safe prime (N = 2q+1, where q is prime)
-  // g    A generator modulo N
   const { N, g } = params;
 
   // A = g^a                  (a = random number)
@@ -45,10 +41,6 @@ export const deriveSession = async (
   username: string,
   privateKey: string
 ): Promise<Session> => {
-  // N    A large safe prime (N = 2q+1, where q is prime)
-  // g    A generator modulo N
-  // k    Multiplier parameter (k = H(N, g) in SRP-6a, k = 3 for legacy SRP-6)
-  // H()  One-way hash function
   const { N, g, k, H } = params;
 
   // a    Secret ephemeral values
@@ -97,7 +89,6 @@ export const verifySession = async (
   clientSession: Session,
   serverSessionProof: string
 ): Promise<void> => {
-  // H()  One-way hash function
   const { H } = params;
 
   // A    Public ephemeral values

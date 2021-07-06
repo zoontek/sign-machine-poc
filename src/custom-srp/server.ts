@@ -5,9 +5,6 @@ import { Ephemeral, Session } from "./types";
 export const generateEphemeral = async (
   verifier: string
 ): Promise<Ephemeral> => {
-  // N    A large safe prime (N = 2q+1, where q is prime)
-  // g    A generator modulo N
-  // k    Multiplier parameter (k = H(N, g) in SRP-6a, k = 3 for legacy SRP-6)
   const { N, g, k } = params;
 
   // v    Password verifier
@@ -31,10 +28,6 @@ export const deriveSession = async (
   verifier: string,
   clientSessionProof: string
 ): Promise<Session> => {
-  // N    A large safe prime (N = 2q+1, where q is prime)
-  // g    A generator modulo N
-  // k    Multiplier parameter (k = H(N, g) in SRP-6a, k = 3 for legacy SRP-6)
-  // H()  One-way hash function
   const { N, g, k, H } = params;
 
   // b    Secret ephemeral values
