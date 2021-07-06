@@ -1,5 +1,5 @@
 import { BigInteger } from "jsbn";
-import { randomHex } from "./randomHex";
+import { randomHex } from "../lib/hex";
 
 const kBigInteger = Symbol("big-integer");
 const kHexLength = Symbol("hex-length");
@@ -7,6 +7,11 @@ const kHexLength = Symbol("hex-length");
 export class SRPInteger {
   [kBigInteger]: BigInteger;
   [kHexLength]: number | null;
+
+  constructor(bigInteger: BigInteger, hexLength: number | null) {
+    this[kBigInteger] = bigInteger;
+    this[kHexLength] = hexLength;
+  }
 
   static ZERO = new SRPInteger(new BigInteger("0"), null);
 
@@ -16,11 +21,6 @@ export class SRPInteger {
 
   static randomInteger(bytes: number) {
     return SRPInteger.fromHex(randomHex(bytes));
-  }
-
-  constructor(bigInteger: BigInteger, hexLength: number | null) {
-    this[kBigInteger] = bigInteger;
-    this[kHexLength] = hexLength;
   }
 
   add(val: SRPInteger) {

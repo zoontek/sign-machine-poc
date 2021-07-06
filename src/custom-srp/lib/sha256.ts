@@ -1,7 +1,6 @@
 import { encodeUtf8 } from "../../utils/common";
-import { arrayBufferToHex } from "./arrayBufferToHex";
 import { crypto } from "./crypto";
-import { hexToArrayBuffer } from "./hexToArrayBuffer";
+import { arrayBufferToHex, hexToArrayBuffer } from "./hex";
 import { SRPInteger } from "./SRPInteger";
 
 const concat = (buffers: ArrayBuffer[]) => {
