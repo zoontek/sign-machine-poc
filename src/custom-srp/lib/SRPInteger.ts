@@ -1,15 +1,15 @@
 import { BigInteger } from "jsbn";
 import { randomHex } from "../lib/hex";
 
-const kBigInteger = Symbol("big-integer");
-const kHexLength = Symbol("hex-length");
+const kBigInt = Symbol("bigInt");
+const kHexLength = Symbol("hexLength");
 
 export class SRPInteger {
-  [kBigInteger]: BigInteger;
+  [kBigInt]: BigInteger;
   [kHexLength]: number | null;
 
   constructor(bigInteger: BigInteger, hexLength: number | null) {
-    this[kBigInteger] = bigInteger;
+    this[kBigInt] = bigInteger;
     this[kHexLength] = hexLength;
   }
 
@@ -24,40 +24,37 @@ export class SRPInteger {
   }
 
   add(value: SRPInteger) {
-    return new SRPInteger(this[kBigInteger].add(value[kBigInteger]), null);
+    return new SRPInteger(this[kBigInt].add(value[kBigInt]), null);
   }
 
   equals(value: SRPInteger) {
-    return this[kBigInteger].equals(value[kBigInteger]);
+    return this[kBigInt].equals(value[kBigInt]);
   }
 
   mod(m: SRPInteger) {
-    return new SRPInteger(this[kBigInteger].mod(m[kBigInteger]), m[kHexLength]);
+    return new SRPInteger(this[kBigInt].mod(m[kBigInt]), m[kHexLength]);
   }
 
   modPow(exponent: SRPInteger, m: SRPInteger) {
     return new SRPInteger(
-      this[kBigInteger].modPow(exponent[kBigInteger], m[kBigInteger]),
+      this[kBigInt].modPow(exponent[kBigInt], m[kBigInt]),
       m[kHexLength]
     );
   }
 
   multiply(value: SRPInteger) {
-    return new SRPInteger(this[kBigInteger].multiply(value[kBigInteger]), null);
+    return new SRPInteger(this[kBigInt].multiply(value[kBigInt]), null);
   }
 
   subtract(value: SRPInteger) {
     return new SRPInteger(
-      this[kBigInteger].subtract(value[kBigInteger]),
+      this[kBigInt].subtract(value[kBigInt]),
       this[kHexLength]
     );
   }
 
   xor(value: SRPInteger) {
-    return new SRPInteger(
-      this[kBigInteger].xor(value[kBigInteger]),
-      this[kHexLength]
-    );
+    return new SRPInteger(this[kBigInt].xor(value[kBigInt]), this[kHexLength]);
   }
 
   toHex() {
@@ -67,6 +64,6 @@ export class SRPInteger {
       throw new Error("This SRPInteger has no specified length");
     }
 
-    return this[kBigInteger].toString(16).padStart(maxLength, "0");
+    return this[kBigInt].toString(16).padStart(maxLength, "0");
   }
 }
