@@ -13,6 +13,7 @@
     "@chakra-ui/react": "1.5.2",
     "@emotion/react": "11.1.5",
     "@emotion/styled": "11.3.0",
+    "@kapetan/secure-remote-password": "1.0.1",
     "base-64": "1.0.0",
     "base64-arraybuffer": "0.2.0",
     "framer-motion": "4.1.5",
