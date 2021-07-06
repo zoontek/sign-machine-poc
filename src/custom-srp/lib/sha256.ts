@@ -4,7 +4,7 @@ import { bufferToHex, hexToBuffer } from "./hex";
 import { SRPInt } from "./SRPInt";
 
 export const sha256 = async (...args: (SRPInt | string)[]) => {
-  const buffers: ArrayBuffer[] = args.map((arg) =>
+  const buffers = args.map((arg) =>
     typeof arg === "string" ? encodeUtf8(arg) : hexToBuffer(arg.toHex())
   );
 
