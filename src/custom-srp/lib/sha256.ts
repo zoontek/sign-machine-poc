@@ -1,8 +1,8 @@
 import rawSha256 from "crypto-digest-sync/sha256";
-import { arrayBufferToHex } from "../common/arrayBufferToHex";
-import { encodeUtf8 } from "../common/encodeUtf8";
-import { hexToArrayBuffer } from "../common/hexToArrayBuffer";
-import { SRPInteger } from "./srp-integer";
+import { arrayBufferToHex } from "./arrayBufferToHex";
+import { encodeUtf8 } from "./encodeUtf8";
+import { hexToArrayBuffer } from "./hexToArrayBuffer";
+import { SRPInteger } from "./SRPInteger";
 
 const concat = (buffers: ArrayBuffer[]) => {
   const length = buffers.reduce((mem, item) => mem + item.byteLength, 0);

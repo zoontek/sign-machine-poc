@@ -1,5 +1,5 @@
 import { sha256 } from "./sha256";
-import { SRPInteger } from "./srp-integer";
+import { SRPInteger } from "./SRPInteger";
 
 const fromHex = (input: string) =>
   SRPInteger.fromHex(input.replace(/\s+/g, ""));

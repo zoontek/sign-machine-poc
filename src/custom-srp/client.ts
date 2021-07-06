@@ -1,5 +1,5 @@
 import { params } from "./lib/params";
-import { SRPInteger } from "./lib/srp-integer";
+import { SRPInteger } from "./lib/SRPInteger";
 import { Ephemeral, Session } from "./types";
 
 export const generateSalt = (): string => {

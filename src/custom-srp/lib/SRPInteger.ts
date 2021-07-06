@@ -1,5 +1,5 @@
 import { BigInteger } from "jsbn";
-import { randomHex } from "../common/randomHex";
+import { randomHex } from "./randomHex";
 
 const kBigInteger = Symbol("big-integer");
 const kHexLength = Symbol("hex-length");
