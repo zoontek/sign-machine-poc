@@ -1,5 +1,4 @@
 // https://github.com/LinusU/array-buffer-to-hex
-// https://github.com/LinusU/crypto-random-hex
 // https://github.com/LinusU/hex-to-array-buffer
 
 export const arrayBufferToHex = (arrayBuffer: ArrayBuffer) => {
