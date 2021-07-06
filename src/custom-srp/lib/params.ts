@@ -22,6 +22,6 @@ const k = sha256(N, g);
 export const params = {
   N, // A large safe prime (N = 2q+1, where q is prime)
   g, // A generator modulo N
-  k, // Multiplier parameter (k = H(N, g) in SRP-6a, k = 3 for legacy SRP-6)
+  k, // Multiplier parameter (k = H(N, g))
   H: sha256, // One-way hash function
 };
