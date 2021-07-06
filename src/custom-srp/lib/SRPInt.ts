@@ -1,6 +1,6 @@
 import { BigInteger } from "jsbn";
 import { crypto } from "./crypto";
-import { arrayBufferToHex } from "./hex";
+import { bufferToHex } from "./hex";
 
 const kBigInt = Symbol("bigInt");
 const kHexLength = Symbol("hexLength");
@@ -24,7 +24,7 @@ export class SRPInt {
     const view = new Uint8Array(256 / 8);
     crypto.getRandomValues(view);
 
-    const hex = arrayBufferToHex(view.buffer);
+    const hex = bufferToHex(view.buffer);
     return SRPInt.fromHex(hex);
   }
 

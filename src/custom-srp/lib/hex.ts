@@ -1,8 +1,8 @@
 // https://github.com/LinusU/array-buffer-to-hex
 // https://github.com/LinusU/hex-to-array-buffer
 
-export const arrayBufferToHex = (arrayBuffer: ArrayBuffer) => {
-  const view = new Uint8Array(arrayBuffer);
+export const bufferToHex = (buffer: ArrayBufferLike): string => {
+  const view = new Uint8Array(buffer);
   let result = "";
 
   for (let i = 0; i < view.length; i++) {
@@ -13,7 +13,7 @@ export const arrayBufferToHex = (arrayBuffer: ArrayBuffer) => {
   return result;
 };
 
-export const hexToArrayBuffer = (hex: string) => {
+export const hexToBuffer = (hex: string): ArrayBufferLike => {
   if (hex.length % 2 !== 0) {
     throw new RangeError("Expected string to be an even number of characters");
   }
