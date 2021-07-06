@@ -8,6 +8,16 @@ export class SRPInteger {
   [kBigInteger]: BigInteger;
   [kHexLength]: number | null;
 
+  static ZERO = new SRPInteger(new BigInteger("0"), null);
+
+  static fromHex(input: string) {
+    return new SRPInteger(new BigInteger(input, 16), input.length);
+  }
+
+  static randomInteger(bytes: number) {
+    return SRPInteger.fromHex(randomHex(bytes));
+  }
+
   constructor(bigInteger: BigInteger, hexLength: number | null) {
     this[kBigInteger] = bigInteger;
     this[kHexLength] = hexLength;
@@ -65,14 +75,4 @@ export class SRPInteger {
 
     return this[kBigInteger].toString(16).padStart(hexLength, "0");
   }
-
-  static fromHex = (input: string) => {
-    return new SRPInteger(new BigInteger(input, 16), input.length);
-  };
-
-  static randomInteger = (bytes: number) => {
-    return SRPInteger.fromHex(randomHex(bytes));
-  };
-
-  static ZERO = new SRPInteger(new BigInteger("0"), null);
 }
