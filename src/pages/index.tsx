@@ -289,7 +289,7 @@ const Home: FC = () => {
               .catch((error) => console.log({ error }));
           }}
         >
-          Sign
+          Signin
         </Button>
 
         <Box height={5} />

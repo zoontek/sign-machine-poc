@@ -39,6 +39,10 @@ export const initSignMachine = async (
     ["sign", "verify"]
   );
 
+  if (!ecdsaKey.privateKey || !ecdsaKey.publicKey) {
+    throw new Error("ECDSA keys are not exported");
+  }
+
   const pbkdf2Key = await window.crypto.subtle.importKey(
     "raw",
     stringToArrayBuffer(password),
